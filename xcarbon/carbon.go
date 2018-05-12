@@ -4,7 +4,6 @@ import (
 	"math"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -12,33 +11,22 @@ const (
 	DATE_TIME_LAYOUT = "2006-01-02 15:04:05"
 )
 
-// form @github.com/jinzhu/now and more
-var TimeFormats = []string{
-	DATE_TIME_LAYOUT,
-	"1/2/2006", "1/2/2006 15:4:5", "2006-1-2 15:4:5", "2006-1-2 15:4", "2006-1-2", "1-2", "15:4:5", "15:4",
-	"2013-02-03", "15:4:5 Jan 2, 2006 MST", "15:04:05", "2013/02/03",
-	"2013-02-03 19:54:00 PST",
-	time.RFC822, time.RubyDate, time.RFC822Z, time.RFC3339,
-}
-
 type Carbon struct {
 	time.Time
 }
 
-// return Carbon with time Now
+// INITIALISE ///////////////////////////////////////////////////////////////////////////
+
 func Now() *Carbon {
-	c := &Carbon{time.Now()}
-	return c
+	return &Carbon{time.Now()}
 }
 
-// return Carbon with time Now
-func CreateFromTime(timeObject time.Time) *Carbon {
-	c := &Carbon{timeObject}
-	return c
+func CreateFromTimestamp(timestamp int64) *Carbon {
+	t := time.Unix(timestamp, 0)
+	t2 := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Now().Location())
+	return &Carbon{t2}
 }
 
-// create Carbon with year, month, day, hour, minute, second, nanosecond, int,  TZ string
-// Create(2001, 12, 01, 15, 25, 55, 0, "UTC") = 2001-12-01 13:25:55 +0000 UTC
 func Create(year, month, day int, args ...interface{}) *Carbon {
 	var tz string
 	Month := time.Month(month)
@@ -71,34 +59,6 @@ func Create(year, month, day int, args ...interface{}) *Carbon {
 	return c
 }
 
-// create Carbon from time string, return in UTC, if tz not specified
-// CreateFrom("2015-01-25 15:4:5") = 2015-01-25 15:04:55 +0000 UTC
-func CreateFrom(stringDate string) (*Carbon, error) {
-	var carbon = Now()
-	var err error
-	var tm time.Time
-	for _, format := range TimeFormats {
-		tm, err = time.Parse(format, stringDate)
-		if err == nil {
-			carbon.Time = tm
-			break
-		}
-	}
-
-	return carbon, err
-}
-
-// custom Unmarshal func form many times formats
-func (t *Carbon) UnmarshalJSON(buf []byte) error {
-	tt, err := CreateFrom(strings.Trim(string(buf), `"`))
-	if err != nil {
-		return err
-	}
-	t.Time = tt.Time
-	return nil
-}
-
-// set tx location, ex. "UTC"
 func (c *Carbon) SetTZ(tz string) *Carbon {
 	location, _ := time.LoadLocation(tz)
 	if location != nil {
@@ -107,7 +67,6 @@ func (c *Carbon) SetTZ(tz string) *Carbon {
 	return c
 }
 
-// set time, ex. "23.59.29"
 func (c *Carbon) SetTime(hours, minutes, seconds int) *Carbon {
 	c.Time = time.Date(
 		c.Year(),
@@ -120,6 +79,77 @@ func (c *Carbon) SetTime(hours, minutes, seconds int) *Carbon {
 		c.Location(),
 	)
 
+	return c
+}
+
+func (c *Carbon) Copy() *Carbon {
+	t2 := *c
+	return &t2
+}
+
+func (c *Carbon) In(location string) *Carbon {
+	c.SetTZ(location)
+	return c
+}
+
+// SET ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) SetSecond(second int) *Carbon {
+	c.Time = time.Date(c.Year(), c.Month(), c.Day(), c.Hour(), c.Minute(), second, c.Nanosecond(), c.Location())
+	return c
+}
+
+func (c *Carbon) SetMinute(minute int) *Carbon {
+	c.Time = time.Date(c.Year(), c.Month(), c.Day(), c.Hour(), minute, c.Second(), c.Nanosecond(), c.Location())
+	return c
+}
+
+func (c *Carbon) SetHour(hour int) *Carbon {
+	c.Time = time.Date(c.Year(), c.Month(), c.Day(), hour, c.Minute(), c.Second(), c.Nanosecond(), c.Location())
+	return c
+}
+
+func (c *Carbon) SetDay(day int) *Carbon {
+	c.Time = time.Date(c.Year(), c.Month(), day, c.Hour(), c.Minute(), c.Second(), c.Nanosecond(), c.Location())
+	return c
+}
+
+func (c *Carbon) SetMonth(month time.Month) *Carbon {
+	c.Time = time.Date(c.Year(), month, c.Day(), c.Hour(), c.Minute(), c.Second(), c.Nanosecond(), c.Location())
+	return c
+}
+
+func (c *Carbon) SetYear(year int) *Carbon {
+	c.Time = time.Date(year, c.Month(), c.Day(), c.Hour(), c.Minute(), c.Second(), c.Nanosecond(), c.Location())
+	return c
+}
+
+// SUB ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) SubSecond() *Carbon {
+	return c.SubSeconds(1)
+}
+
+func (c *Carbon) SubSeconds(seconds int) *Carbon {
+	c.Time = c.Time.Add(time.Duration(-seconds) * time.Second)
+	return c
+}
+
+func (c *Carbon) SubMinute() *Carbon {
+	return c.SubMinutes(1)
+}
+
+func (c *Carbon) SubMinutes(minutes int) *Carbon {
+	c.Time = c.Time.Add(time.Duration(-minutes) * time.Minute)
+	return c
+}
+
+func (c *Carbon) SubHour() *Carbon {
+	return c.SubHours(1)
+}
+
+func (c *Carbon) SubHours(hours int) *Carbon {
+	c.Time = c.Time.Add(time.Duration(-hours) * time.Hour)
 	return c
 }
 
@@ -150,6 +180,43 @@ func (c *Carbon) SubYears(years int) *Carbon {
 	return c
 }
 
+func (c *Carbon) SubDecade() *Carbon {
+	return c.SubYears(10)
+}
+
+func (c *Carbon) SubDecades(decades int) *Carbon {
+	return c.SubYears(decades * 10)
+}
+
+// ADD ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) AddSecond() *Carbon {
+	return c.AddSeconds(1)
+}
+
+func (c *Carbon) AddSeconds(seconds int) *Carbon {
+	c.Time = c.Time.Add(time.Duration(seconds) * time.Second)
+	return c
+}
+
+func (c *Carbon) AddMinute() *Carbon {
+	return c.AddMinutes(1)
+}
+
+func (c *Carbon) AddMinutes(minutes int) *Carbon {
+	c.Time = c.Time.Add(time.Duration(minutes) * time.Minute)
+	return c
+}
+
+func (c *Carbon) AddHour() *Carbon {
+	return c.AddHours(1)
+}
+
+func (c *Carbon) AddHours(hours int) *Carbon {
+	c.Time = c.Time.Add(time.Duration(hours) * time.Hour)
+	return c
+}
+
 func (c *Carbon) AddDay() *Carbon {
 	return c.AddDays(1)
 }
@@ -177,60 +244,23 @@ func (c *Carbon) AddYears(years int) *Carbon {
 	return c
 }
 
-func (c *Carbon) DiffInSeconds(from *Carbon) int {
-	return round(c.Sub(from.Time).Seconds())
+func (c *Carbon) AddDecade() *Carbon {
+	return c.AddYears(10)
 }
 
-func (c *Carbon) DiffInMinutes(from *Carbon) int {
-	return round(c.Sub(from.Time).Minutes())
+func (c *Carbon) AddDecades(decades int) *Carbon {
+	return c.AddYears(decades * 10)
 }
 
-func (c *Carbon) DiffInHours(from *Carbon) int {
-	return round(c.Sub(from.Time).Hours())
-}
-
-func (c *Carbon) DiffInDays(from *Carbon) int {
-	return c.DiffInHours(from) / 24
-}
-
-// Determines if the instance is equal to another
-func (c *Carbon) Eq(another *Carbon) bool {
-	return c.Equal(another.Time)
-}
-
-// Determines if the instance is greater (after) than another
-func (c *Carbon) Gt(another *Carbon) bool {
-	return c.After(another.Time)
-}
-
-// Determines if the instance is less (Before) than another
-func (c *Carbon) Lt(another *Carbon) bool {
-	return c.Before(another.Time)
-}
-
-// Determines if the instance is greater than before and less than after
-func (c *Carbon) Between(before, after *Carbon) bool {
-	return c.After(before.Time) && c.Before(after.Time)
-}
+// START ///////////////////////////////////////////////////////////////////////////
 
 func (c *Carbon) StartOfHour() *Carbon {
 	c.Time = c.Truncate(time.Hour)
 	return c
 }
 
-func (c *Carbon) EndOfHour() *Carbon {
-	c.StartOfHour()
-	c.Time = c.Add(time.Hour - time.Second)
-	return c
-}
-
 func (c *Carbon) StartOfDay() *Carbon {
 	c.Time = c.StartOfHour().Add(-time.Hour * time.Duration(c.Hour()))
-	return c
-}
-
-func (c *Carbon) EndOfDay() *Carbon {
-	c.Time = c.StartOfDay().Add(time.Hour*time.Duration(24) - time.Second)
 	return c
 }
 
@@ -250,22 +280,12 @@ func (c *Carbon) StartOfWeek(firstDayOfWeekIsMonday ...bool) *Carbon {
 	return c
 }
 
-func (c *Carbon) EndOfWeek() *Carbon {
-	c.Time = c.StartOfWeek().Add(time.Hour*time.Duration(24*7) - time.Second)
-	return c
-}
-
 func (c *Carbon) StartOfMonth() *Carbon {
 	year := c.Year()
 	Month := c.Month()
 	location := time.Now().Location()
 	c = &Carbon{time.Date(year, Month, 1, 0, 0, 0, 0, location)}
 
-	return c
-}
-
-func (c *Carbon) EndOfMonth() *Carbon {
-	c.Time = c.StartOfMonth().AddDate(0, 1, 0).Add(-time.Second)
 	return c
 }
 
@@ -277,10 +297,139 @@ func (c *Carbon) StartOfYear() *Carbon {
 	return c
 }
 
+func (c *Carbon) StartOfQuarter() *Carbon {
+	// TODO
+	return c
+}
+
+// END ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) EndOfHour() *Carbon {
+	c.StartOfHour()
+	c.Time = c.Add(time.Hour - time.Second)
+	return c
+}
+
+func (c *Carbon) EndOfDay() *Carbon {
+	c.Time = c.StartOfDay().Add(time.Hour*time.Duration(24) - time.Second)
+	return c
+}
+
+func (c *Carbon) EndOfWeek() *Carbon {
+	c.Time = c.StartOfWeek().Add(time.Hour*time.Duration(24*7) - time.Second)
+	return c
+}
+
+func (c *Carbon) EndOfMonth() *Carbon {
+	c.Time = c.StartOfMonth().AddDate(0, 1, 0).Add(-time.Second)
+	return c
+}
+
 func (c *Carbon) EndOfYear() *Carbon {
 	c.Time = c.StartOfYear().AddDate(1, 0, 0).Add(-time.Second)
 	return c
 }
+
+func (c *Carbon) EndOfQuarter() *Carbon {
+	// TODO
+	return c
+}
+
+// DIFF ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) DiffInSeconds(from *Carbon) int {
+	if from == nil {
+		from = Now()
+	}
+	return diff(int(c.Second()), int(from.Second()))
+}
+
+func (c *Carbon) DiffInMinutes(from *Carbon) int {
+	if from == nil {
+		from = Now()
+	}
+	return diff(int(c.Minute()), int(from.Minute()))
+}
+
+func (c *Carbon) DiffInHours(from *Carbon) int {
+	if from == nil {
+		from = Now()
+	}
+	return diff(int(c.Hour()), int(from.Hour()))
+}
+
+func (c *Carbon) DiffInDays(from *Carbon) int {
+	if from == nil {
+		from = Now()
+	}
+	return diff(int(c.Day()), int(from.Day()))
+}
+
+func (c *Carbon) DiffInMonths(from *Carbon) int {
+	if from == nil {
+		from = Now()
+	}
+	return diff(int(c.Month()), int(from.Month()))
+}
+
+func (c *Carbon) DiffInYears(from *Carbon) int {
+	if from == nil {
+		from = Now()
+	}
+	return diff(c.Year(), from.Year())
+}
+
+func (c *Carbon) DiffInHuman(from *Carbon) string {
+	return c.internalDiffInHuman(from, false)
+}
+
+func (c *Carbon) DiffInHumanShort(from *Carbon) string {
+	return c.internalDiffInHuman(from, true)
+}
+
+func (c *Carbon) internalDiffInHuman(from *Carbon, short bool) string {
+	tmp := ""
+
+	if from == nil {
+		from = Now()
+	}
+
+	years := c.DiffInYears(from)
+	months := c.DiffInMonths(from)
+	days := c.DiffInDays(from)
+	hours := c.DiffInHours(from)
+	minutes := c.DiffInMinutes(from)
+	seconds := c.DiffInSeconds(from)
+
+	tmp += diffstring(years, short, "year")
+	tmp += diffstring(months, short, "month")
+	tmp += diffstring(days, short, "days")
+	tmp += diffstring(hours, short, "hours")
+	tmp += diffstring(minutes, short, "minutes")
+	tmp += diffstring(seconds, short, "seconds")
+
+	return tmp
+}
+
+// DIFF ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) Eq(another *Carbon) bool {
+	return c.Equal(another.Time)
+}
+
+func (c *Carbon) Gt(another *Carbon) bool {
+	return c.After(another.Time)
+}
+
+func (c *Carbon) Lt(another *Carbon) bool {
+	return c.Before(another.Time)
+}
+
+func (c *Carbon) Between(before, after *Carbon) bool {
+	return c.After(before.Time) && c.Before(after.Time)
+}
+
+// MONTH ///////////////////////////////////////////////////////////////////////////
 
 func (c *Carbon) PreviousMonth() *Carbon {
 	c.Time = c.StartOfMonth().Add(-time.Second)
@@ -306,33 +455,35 @@ func (c *Carbon) MonthName() string {
 	return c.Month().String()
 }
 
-func (c *Carbon) DayNumber() int {
-	return c.Day()
-}
+// NUMBERS ///////////////////////////////////////////////////////////////////////////
+
 func (c *Carbon) MonthNumber() int {
 	return int(c.Month())
 }
+
+func (c *Carbon) DayNumber() int {
+	return c.Day()
+}
+
 func (c *Carbon) YearNumber() int {
 	return c.Year()
 }
 
-// return string with DateTime format "2006-01-25 15:04:05"
+// CONVERT ///////////////////////////////////////////////////////////////////////////
+
 func (c *Carbon) ToDateTimeString() string {
 	return c.Format(DATE_TIME_LAYOUT)
-}
-
-// CUSTOM
-
-func round(f float64) int {
-	if math.Abs(f) < 0.5 {
-		return 0
-	}
-	return int(f + math.Copysign(0.5, f))
 }
 
 func (c *Carbon) ToTimeStamp() int64 {
 	return c.Unix()
 }
+
+func (c *Carbon) FormatIt(format int) string {
+	return c.Format(getFormat(format))
+}
+
+// QUARTER ///////////////////////////////////////////////////////////////////////////
 
 func (c *Carbon) Quarter(FYStartMonth ...time.Month) int {
 	var startFY time.Month
@@ -364,38 +515,27 @@ func (c *Carbon) Quarter(FYStartMonth ...time.Month) int {
 	return 0
 }
 
-func getQuarter(quarter, monthName time.Month) []int {
-	month := int(monthName)
-	var res []int
+// LEAPYEAR ///////////////////////////////////////////////////////////////////////////
 
-	for i := 0; i < 3; i++ {
-		if month > 12 {
-			month -= 12
-		}
-		res = append(res, month)
-		month++
-	}
-	return res
+func (c *Carbon) IsLeapYear() bool {
+	year := c.Year()
+	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
 }
 
-func inArray(val interface{}, array interface{}) (exists bool, index int) {
-	exists = false
-	index = -1
-
-	switch reflect.TypeOf(array).Kind() {
-	case reflect.Slice:
-		s := reflect.ValueOf(array)
-
-		for i := 0; i < s.Len(); i++ {
-			if reflect.DeepEqual(val, s.Index(i).Interface()) == true {
-				index = i
-				exists = true
-				return
-			}
+func (c *Carbon) NextLeapYear() int {
+	year := c.Year()
+	for i := 0; i < 6; i++ {
+		if internalIsLeapYear(year) {
+			return year
+		} else {
+			year++
 		}
 	}
-	return
+
+	return 0
 }
+
+// PAST / FUTURE ///////////////////////////////////////////////////////////////////////////
 
 func (c *Carbon) Tomorrow() *Carbon {
 	return c.AddDay()
@@ -404,6 +544,16 @@ func (c *Carbon) Tomorrow() *Carbon {
 func (c *Carbon) Yesterday() *Carbon {
 	return c.SubDay()
 }
+
+func (c *Carbon) IsFuture(t2 *Carbon) bool {
+	return t2.Gt(c)
+}
+
+func (c *Carbon) IsPast(t2 *Carbon) bool {
+	return t2.Lt(c)
+}
+
+// ORDINAL ///////////////////////////////////////////////////////////////////////////
 
 func (c *Carbon) Ordinal() string {
 	return strconv.Itoa(c.DayNumber()) + c.OrdinalOnly()
@@ -429,6 +579,97 @@ func (c *Carbon) OrdinalOnly() string {
 	return suffix
 }
 
+// WEEKS ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) IsWeekday() bool {
+	return !c.IsWeekend()
+}
+
+func (c *Carbon) IsWeekend() bool {
+	if c.Weekday() == 0 || c.Weekday() == 6 {
+		return true
+	}
+	return false
+}
+
+func (c *Carbon) Week() int {
+	_, b := c.ISOWeek()
+	return b
+}
+
+func (c *Carbon) WeekOfMonth() int {
+	w := math.Ceil(float64(c.Day() / 7))
+	return int(w + 1)
+}
+
+// TAX ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) TaxYear() string {
+	if c.Month() < 4 && c.Day() < 6 {
+		return strconv.Itoa(c.Year()-1) + "-" + strconv.Itoa(c.Year())
+	} else if c.Month() > 3 && c.Day() > 5 {
+		return strconv.Itoa(c.Year()) + "-" + strconv.Itoa(c.Year()+1)
+	}
+	return ""
+}
+
+// DAYS ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) IsMonday() bool {
+	return c.IsDay(time.Monday)
+}
+
+func (c *Carbon) IsTuesday() bool {
+	return c.IsDay(time.Tuesday)
+}
+
+func (c *Carbon) IsWednesday() bool {
+	return c.IsDay(time.Wednesday)
+}
+
+func (c *Carbon) IsThursday() bool {
+	return c.IsDay(time.Thursday)
+}
+
+func (c *Carbon) IsFriday() bool {
+	return c.IsDay(time.Friday)
+}
+
+func (c *Carbon) IsSaturday() bool {
+	return c.IsDay(time.Saturday)
+}
+
+func (c *Carbon) IsSunday() bool {
+	return c.IsDay(time.Sunday)
+}
+
+func (c *Carbon) IsDay(day time.Weekday) bool {
+	if c.Weekday() == day {
+		return true
+	}
+	return false
+}
+
+func (c *Carbon) PreviousDay(day time.Weekday) *Carbon {
+	for i := 0; i < 8; i++ {
+		c.SubDay()
+		if c.Weekday() == day {
+			return c
+		}
+	}
+	return c
+}
+
+func (c *Carbon) NextDay(day time.Weekday) *Carbon {
+	for i := 0; i < 8; i++ {
+		c.AddDay()
+		if c.Weekday() == day {
+			return c
+		}
+	}
+	return c
+}
+
 func (c *Carbon) DaysInMonth() int {
 	days := 31
 	switch c.Month() {
@@ -446,9 +687,11 @@ func (c *Carbon) DaysInMonth() int {
 	return days
 }
 
-func (c *Carbon) IsLeapYear() bool {
-	year := c.Year()
-	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
+func (c *Carbon) DaysInYear() int {
+	if c.IsLeapYear() {
+		return 366
+	}
+	return 365
 }
 
 func (c *Carbon) DaysLeftInWeek() int {
@@ -481,58 +724,27 @@ func (c *Carbon) DaysToHours(days int) int {
 	return days * 24
 }
 
-func (c *Carbon) IsWeekday() bool {
-	return !c.IsWeekend()
-}
-
-func (c *Carbon) IsWeekend() bool {
-	if c.Weekday() == 0 || c.Weekday() == 6 {
-		return true
-	}
-	return false
-}
-
-func (c *Carbon) TaxYear() string {
-	if c.Month() < 4 && c.Day() < 6 {
-		return strconv.Itoa(c.Year()-1) + "-" + strconv.Itoa(c.Year())
-	} else if c.Month() > 3 && c.Day() > 5 {
-		return strconv.Itoa(c.Year()) + "-" + strconv.Itoa(c.Year()+1)
+func (c *Carbon) DayName() string {
+	switch c.Day() {
+	case int(time.Monday):
+		return "Monday"
+	case int(time.Tuesday):
+		return "Tuesday"
+	case int(time.Wednesday):
+		return "Wednesday"
+	case int(time.Thursday):
+		return "Thursday"
+	case int(time.Friday):
+		return "Friday"
+	case int(time.Saturday):
+		return "Saturday"
+	case int(time.Sunday):
+		return "Sunday"
 	}
 	return ""
 }
 
-func (c *Carbon) AddDecade() *Carbon {
-	return c.AddYears(10)
-}
-
-func (c *Carbon) AddDecades(decades int) *Carbon {
-	return c.AddYears(decades * 10)
-}
-
-func (c *Carbon) SubDecade() *Carbon {
-	return c.SubYears(10)
-}
-
-func (c *Carbon) SubDecades(decades int) *Carbon {
-	return c.SubYears(decades * 10)
-}
-
-func (c *Carbon) NextLeapYear() int {
-	year := c.Year()
-	for i := 0; i < 6; i++ {
-		if internalIsLeapYear(year) {
-			return year
-		} else {
-			year++
-		}
-	}
-
-	return 0
-}
-
-func internalIsLeapYear(year int) bool {
-	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
-}
+// SEASONS ///////////////////////////////////////////////////////////////////////////
 
 func (c *Carbon) DaysToSpring() int {
 	// 20th March
@@ -582,18 +794,6 @@ func (c *Carbon) DaysToWinter() int {
 		day = 22
 	}
 	return c.getDaysDifference(day, month, year)
-}
-
-func (c *Carbon) DaysToChristmas() int {
-	year := c.Year()
-	month := 12
-	day := 25
-	return c.getDaysDifference(day, month, year)
-}
-
-func (c *Carbon) getDaysDifference(day, month, year int) int {
-	tmp := Create(year, month, day)
-	return tmp.DiffInDays(c)
 }
 
 func (c *Carbon) IsSpring() bool {
@@ -654,48 +854,62 @@ func (c *Carbon) Season() string {
 	}
 }
 
-func (c *Carbon) Copy() *Carbon {
-	t2 := *c
-	return &t2
+func (c *Carbon) DaysToChristmas() int {
+	year := c.Year()
+	month := 12
+	day := 25
+	return c.getDaysDifference(day, month, year)
 }
 
-func (c *Carbon) IsFuture(t2 *Carbon) bool {
-	return t2.Gt(c)
+// INTERNAL ///////////////////////////////////////////////////////////////////////////
+
+func (c *Carbon) getDaysDifference(day, month, year int) int {
+	tmp := Create(year, month, day)
+	return tmp.DiffInDays(c)
 }
 
-func (c *Carbon) IsPast(t2 *Carbon) bool {
-	return t2.Lt(c)
+func internalIsLeapYear(year int) bool {
+	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
 }
 
-func (c *Carbon) Week() int {
-	_, b := c.ISOWeek()
-	return b
+func round(f float64) int {
+	if math.Abs(f) < 0.5 {
+		return 0
+	}
+	return int(f + math.Copysign(0.5, f))
 }
 
-func (c *Carbon) PreviousDay(day time.Weekday) *Carbon {
-	for i := 0; i < 8; i++ {
-		c.SubDay()
-		if c.Weekday() == day {
-			return c
+func getQuarter(quarter, monthName time.Month) []int {
+	month := int(monthName)
+	var res []int
+
+	for i := 0; i < 3; i++ {
+		if month > 12 {
+			month -= 12
+		}
+		res = append(res, month)
+		month++
+	}
+	return res
+}
+
+func inArray(val interface{}, array interface{}) (exists bool, index int) {
+	exists = false
+	index = -1
+
+	switch reflect.TypeOf(array).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(array)
+
+		for i := 0; i < s.Len(); i++ {
+			if reflect.DeepEqual(val, s.Index(i).Interface()) == true {
+				index = i
+				exists = true
+				return
+			}
 		}
 	}
-
-	return c
-}
-
-func (c *Carbon) NextDay(day time.Weekday) *Carbon {
-	for i := 0; i < 8; i++ {
-		c.AddDay()
-		if c.Weekday() == day {
-			return c
-		}
-	}
-
-	return c
-}
-
-func (c *Carbon) FormatIt(format int) string {
-	return c.Format(getFormat(format))
+	return
 }
 
 func getFormat(format int) string {
@@ -758,91 +972,33 @@ func getFormat(format int) string {
 	return "02/01/06 03:04:05 PM Jan"
 }
 
-func (c *Carbon) IsMonday() bool {
-	return c.IsDay(time.Monday)
-}
-
-func (c *Carbon) IsTuesday() bool {
-	return c.IsDay(time.Tuesday)
-}
-
-func (c *Carbon) IsWednesday() bool {
-	return c.IsDay(time.Wednesday)
-}
-
-func (c *Carbon) IsThursday() bool {
-	return c.IsDay(time.Thursday)
-}
-
-func (c *Carbon) IsFriday() bool {
-	return c.IsDay(time.Friday)
-}
-
-func (c *Carbon) IsSaturday() bool {
-	return c.IsDay(time.Saturday)
-}
-
-func (c *Carbon) IsSunday() bool {
-	return c.IsDay(time.Sunday)
-}
-
-func (c *Carbon) IsDay(day time.Weekday) bool {
-	if c.Weekday() == day {
-		return true
+func diff(a, b int) int {
+	if a == b {
+		return 0
 	}
-	return false
+	if a > b {
+		return a - b
+	} else {
+		return b - a
+	}
 }
 
-func (c *Carbon) AddHour() *Carbon {
-	return c.AddHours(1)
-}
+func diffstring(value int, short bool, long string) string {
+	tmp := ""
 
-func (c *Carbon) AddHours(hours int) *Carbon {
-	c.Time = c.Time.Add(time.Duration(hours) * time.Hour)
-	return c
-}
+	if value > 0 {
+		tmp += strconv.Itoa(value)
 
-func (c *Carbon) SubHour() *Carbon {
-	return c.SubHours(1)
-}
+		if short {
+			tmp += long[:1]
+		} else {
+			tmp += " " + long
+			if value > 1 {
+				tmp += "s"
+			}
+		}
+		tmp += " "
+	}
 
-func (c *Carbon) SubHours(hours int) *Carbon {
-	c.Time = c.Time.Add(time.Duration(-hours) * time.Hour)
-	return c
-}
-
-func (c *Carbon) AddMinute() *Carbon {
-	return c.AddMinutes(1)
-}
-
-func (c *Carbon) AddMinutes(minutes int) *Carbon {
-	c.Time = c.Time.Add(time.Duration(minutes) * time.Minute)
-	return c
-}
-
-func (c *Carbon) SubMinute() *Carbon {
-	return c.SubMinutes(1)
-}
-
-func (c *Carbon) SubMinutes(minutes int) *Carbon {
-	c.Time = c.Time.Add(time.Duration(-minutes) * time.Minute)
-	return c
-}
-
-func (c *Carbon) AddSecond() *Carbon {
-	return c.AddSeconds(1)
-}
-
-func (c *Carbon) AddSeconds(seconds int) *Carbon {
-	c.Time = c.Time.Add(time.Duration(seconds) * time.Second)
-	return c
-}
-
-func (c *Carbon) SubSecond() *Carbon {
-	return c.SubSeconds(1)
-}
-
-func (c *Carbon) SubSeconds(seconds int) *Carbon {
-	c.Time = c.Time.Add(time.Duration(-seconds) * time.Second)
-	return c
+	return tmp
 }
