@@ -1,10 +1,14 @@
-package compression
+package xcompression
 
 import (
 	"bytes"
 	"compress/gzip"
 	"io/ioutil"
 )
+
+func CompressString(data string) ([]byte, error) {
+	return Compress([]byte(data))
+}
 
 func Compress(data []byte) ([]byte, error) {
 	var buffer bytes.Buffer

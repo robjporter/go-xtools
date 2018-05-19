@@ -1,8 +1,7 @@
-package files
+package xfiles
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 )
 
@@ -13,9 +12,9 @@ func GetChecksum(data string) string {
 }
 
 //CheckIntegrity checks the integrity.
-func CheckIntegrity(content string, hash string) error {
+func CheckIntegrity(content string, hash string) bool {
 	if hash != GetChecksum(content) {
-		return errors.New("data has been tampered with")
+		return false
 	}
-	return nil
+	return true
 }

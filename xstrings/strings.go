@@ -5,11 +5,50 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
 
 var noop = func(a rune) rune { return a }
+
+func IsInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+func PosInSlice(str string, list []string) int {
+	for k, v := range list {
+		if v == str {
+			return k
+		}
+	}
+	return -1
+}
+
+func StringsBetween(str, start, end string) (between []string) {
+	between = make([]string, 0)
+	fsplit := strings.Split(str, start)
+	for i := 1; i < len(fsplit); i++ {
+		ssplit := strings.SplitN(fsplit[i], end, 2)
+		if len(ssplit) >= 2 {
+			between = append(between, ssplit[0])
+		}
+	}
+	return
+}
+
+func StringBetween(str, start, end string) string {
+	fsplit := strings.Split(str, start)
+	if len(fsplit) == 2 {
+		return strings.Split(fsplit[1], end)[0]
+	}
+	return ""
+}
 
 func Center(str, padding string, width uint) string {
 	text := []rune(str)

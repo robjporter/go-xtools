@@ -12,4 +12,6 @@ func main() {
 	fmt.Println(s.Status())
 	fmt.Println(s.LastStatus())
 	fmt.Println(s.LastStatusString())
+
+	// TODO:
 }

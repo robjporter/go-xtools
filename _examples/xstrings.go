@@ -16,4 +16,8 @@ func main() {
 	fmt.Println(xstrings.ToSnakeUpper("ThisA_test"))
 	fmt.Println(xstrings.ToCamel("ThisA_test"))
 	fmt.Println(xstrings.ToCamelLower("ThisA_test"))
+	fmt.Println(xstrings.IsInSlice("test", []string{"a", "b", "tester", "testing", "test"}))
+	fmt.Println(xstrings.PosInSlice("test", []string{"a", "b", "tester", "testing", "test"}))
+	fmt.Println(xstrings.StringsBetween("[what is between]", "[", "]"))
+	fmt.Println(xstrings.StringBetween("[what is between]", "[", "]"))
 }
