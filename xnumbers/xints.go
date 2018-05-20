@@ -1,6 +1,13 @@
 package xnumbers
 
-import "math/rand"
+import (
+	"math/rand"
+)
+
+func IsNan(input interface{}) bool {
+	//math.IsNaN(input)
+	return true
+}
 
 func IsInIntSlice(str int, list []int) bool {
 	for _, v := range list {
