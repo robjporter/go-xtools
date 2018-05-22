@@ -1,13 +1,4 @@
-// Package log provides a multi-tiered logger used to log output to a io.Writer.
-// The different tiers are (least to highest piority):
-//  1. Info
-//  2. Debug
-//  3. Warn
-//  4. Error
-//  5. Fatal
-// One can set the output, output format, output time format, tags, and colors for tags.
-// One can also add more tiers, and create their own logger with all the different tiers wanted.
-package log
+package xlogger
 
 import (
 	"io"
