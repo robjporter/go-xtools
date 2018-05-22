@@ -1,16 +1,20 @@
 package main
 
-import "github.com/integrii/flaggy"
+import (
+	"../xflags"
+)
+
+// go run xflags1.go -f test
 
 func main() {
 	// Declare variables and their defaults
 	var stringFlag = "defaultValue"
 
 	// Add a flag
-	flaggy.String(&stringFlag, "f", "flag", "A test string flag")
+	xflags.String(&stringFlag, "f", "flag", "A test string flag")
 
 	// Parse the flag
-	flaggy.Parse()
+	xflags.Parse()
 
 	// Use the flag
 	print(stringFlag)

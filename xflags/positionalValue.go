@@ -1,4 +1,4 @@
-package flaggy
+package xflags
 
 // PositionalValue represents a value which is determined by its position
 // relative to where a subcommand was detected.

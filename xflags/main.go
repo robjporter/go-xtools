@@ -23,7 +23,7 @@ TrailingArguments slice.
 
 
 */
-package flaggy
+package xflags
 
 import (
 	"fmt"

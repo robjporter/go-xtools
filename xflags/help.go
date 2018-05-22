@@ -1,4 +1,4 @@
-package flaggy
+package xflags
 
 // defaultHelpTemplate is the help template used by default
 // {{if (or (or (gt (len .StringFlags) 0) (gt (len .IntFlags) 0)) (gt (len .BoolFlags) 0))}}

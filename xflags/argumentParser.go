@@ -1,4 +1,4 @@
-package flaggy
+package xflags
 
 // setValueForParsers sets the value for a specified key in the
 // specified parsers (which normally include a Parser and Subcommand).

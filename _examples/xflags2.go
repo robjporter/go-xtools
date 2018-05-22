@@ -1,20 +1,19 @@
 package main
 
 import (
+	"../xflags"
 	"fmt"
-
-	"github.com/integrii/flaggy"
 )
 
-// Declare variables and their defaults
+// go run xflags2.go testPositional subCmd -i 4 -b
+
 var positionalValue = "defaultString"
 var intFlagT = 3
 var boolFlagB bool
 
 func main() {
-
 	// set a description, name, and version for our parser
-	p := flaggy.NewParser("myAppName")
+	p := xflags.NewParser("myAppName")
 	p.Description = "This parser just shows you how to make a parser."
 	p.Version = "1.3.5"
 	// display some before and after text for all help outputs
@@ -26,7 +25,7 @@ func main() {
 
 	// create a subcommand at position 2
 	// you don't have to finish the subcommand before adding it to the parser
-	subCmd := flaggy.NewSubcommand("subCmd")
+	subCmd := xflags.NewSubcommand("subCmd")
 	subCmd.Description = "Description of subcommand"
 	p.AttachSubcommand(subCmd, 2)
 
