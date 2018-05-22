@@ -5,6 +5,8 @@ import (
 	"image/color"
 
 	"../xgraphics"
+	"sync"
+	"time"
 )
 
 func main() {
@@ -96,4 +98,42 @@ func main() {
 
 	fmt.Println(g.Colors.NewString().BlinkingText("   Blinking Red   "))
 
+
+	pgb := xgraphics.NewProgress("多线程进度条")
+	xgraphics.ProgressLn("进度条1")
+	b := pgb.NewBar("1st", 20000)
+	xgraphics.ProgressLn("进度条2")
+	b2 := pgb.NewBar("2st", 10000)
+	xgraphics.ProgressLn("进度条3")
+	b3 := pgb.NewBar("3st", 30000)
+
+	b.SetSpeedSection(900, 100)
+	b2.SetSpeedSection(900, 100)
+	b3.SetSpeedSection(900, 100)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 20000; i++ {
+			b.Add()
+			time.Sleep(time.Second / 2000)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10000; i++ {
+			b2.Add()
+			time.Sleep(time.Second / 1000)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 30000; i++ {
+			b3.Add()
+			time.Sleep(time.Second / 3000)
+		}
+	}()
+	wg.Wait()
 }

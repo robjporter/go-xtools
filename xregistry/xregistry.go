@@ -1,151 +1,154 @@
-package xregistry
+package xregsitry
 
 import (
-	"fmt"
-	"reflect"
-	"sort"
-	"strings"
+	"time"
 	"sync"
 )
 
-type AnyValue interface{}
+var secondsAfter time.Duration = 1
 
-// Registry is a thread-safe map with strings as keys and anything can be
-// stored as a  value.
-// Locking is required because underlying map will be read and written to
-// by many go routines.
-type Registry struct {
-	lock  sync.RWMutex
-	store map[string]AnyValue
+type value struct{
+	expiry time.Time
+	access time.Time
+	val    interface{}
+	expires time.Duration
 }
 
-// Returns value read from given key and true or false if the key exists
-func (r *Registry) Get(key string) (AnyValue, bool) {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	val, status := r.store[key]
-	return val, status
+type Xregistry struct {
+	store             map[interface{}]*value
+	Expiry            time.Duration
+	cleanupTimer      *time.Timer
+	cleanupLock       sync.Mutex
+	cacheLock         sync.RWMutex
+	OnExpired	      func(key interface{}, val interface{})
 }
 
-func (r *Registry) Exists(key string) bool {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	_, status := r.store[key]
-	return status
-}
-
-func (r *Registry) Clear() {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.store = make(map[string]AnyValue)
-}
-
-func (r *Registry) Delete(key string) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	delete(r.store, key)
-}
-
-func (r *Registry) Len() int {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	return len(r.store)
-}
-
-func (r *Registry) Copy(oldkey string, newkey string) bool {
-	status := false
-	if r.Exists(oldkey) {
-		tmp, _ := r.Get(oldkey)
-		r.Set(newkey, tmp)
-		status = true
+func NewXRegsitry(expiry ...time.Duration) *Xregistry{
+	c := &Xregistry{store:make(map[interface{}]*value)}
+	if expiry != nil {
+		c.Expiry = expiry[0]
+	} else {
+		c.Expiry = 1<<63 - 1
 	}
-	return status
+	return c
 }
 
-// Set (Safely) value under given key
-func (r *Registry) Set(key string, val AnyValue) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.store[key] = val
+func (s *Xregistry) Get(key interface{}) interface{}{
+	s.cacheLock.RLock()
+	valueHolder := s.store[key]
+	s.cacheLock.RUnlock()
+	if valueHolder != nil {
+		n := time.Now()
+		valueHolder.access = n
+		return valueHolder.val
+
+	}
+	return nil
 }
 
-func New() *Registry {
-	return &Registry{store: make(map[string]AnyValue)}
+func (s *Xregistry) GetReset(key interface{}) interface{}{
+	s.cacheLock.RLock()
+	valueHolder := s.store[key]
+	s.cacheLock.RUnlock()
+	if valueHolder != nil {
+		n := time.Now()
+		valueHolder.access = n
+		valueHolder.expiry = valueHolder.access.Add(valueHolder.expires)
+		return valueHolder.val
+
+	}
+	return nil
 }
 
-func (r *Registry) SetWithMap(m map[string]interface{}) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	for k, v := range m {
-		r.store[k] = v
+func (s *Xregistry) Remove(key interface{}) bool{
+	s.cacheLock.Lock()
+	session := s.store[key]
+	if session != nil {
+		delete(s.store, key)
+		s.cacheLock.Unlock()
+		return true
+	}else{
+		s.cacheLock.Unlock()
+		return false
 	}
 }
 
-func (r *Registry) Keys() []string {
-	var keys []string
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-
-	for k := range r.store {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-	return keys
+func (s *Xregistry) SetCustom(key interface{}, val interface{}, expiry time.Duration) {
+	n := time.Now()
+	exp := n.Add(expiry)
+	session := &value{expiry:exp, access:n, val:val,expires:expiry}
+	s.cacheLock.Lock()
+	s.store[key]=session
+	s.cacheLock.Unlock()
+	s.startCleanup(expiry+(secondsAfter*time.Second))
 }
 
-func (r *Registry) String() string {
-	var buf []byte
-	var keys []string
-	r.lock.RLock()
-	defer r.lock.RUnlock()
 
-	for k := range r.store {
-		keys = append(keys, k)
-	}
+func (s *Xregistry) Set(key interface{}, val interface{}) {
+	n := time.Now()
+	expiry := n.Add(s.Expiry)
+	session := &value{expiry:expiry, access:n, val:val}
+	s.cacheLock.Lock()
+	s.store[key]=session
+	s.cacheLock.Unlock()
+	s.startCleanup(s.Expiry+(secondsAfter*time.Second))
+}
 
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		value, err := encodeValue(r.store[k])
-
-		if err != nil {
-			continue
+func (s *Xregistry) cleanupScheduler(){
+	n := time.Now()
+	s.cleanupLock.Lock()
+	var minExpiry time.Time = n.Add(s.Expiry)
+	expiredSessions := make(map[interface{}]*value)
+	s.cacheLock.Lock()
+	var key interface{}
+	var val *value
+	for key = range s.store {
+		val = s.store[key]
+		if n.After(val.expiry){
+			expiredSessions[key] = val
+		}else if val.expiry.Before(minExpiry){
+			minExpiry = val.expiry
 		}
-
-		key := encodeKey(k)
-		buf = append(buf, fmt.Sprintf(" %s=%s", key, value)...)
 	}
-
-	// Remove leading space
-	buf = buf[1:len(buf)]
-
-	return string(buf)
+	for key = range expiredSessions{
+		if s.OnExpired != nil {
+			s.OnExpired(key, expiredSessions[key].val);
+		}
+		delete(s.store, key)
+	}
+	s.cacheLock.Unlock()
+	for key = range expiredSessions{
+		val = expiredSessions[key]
+	}
+	sessionsLength := len(s.store)
+	if sessionsLength > 0 {
+		nextRunIn := minExpiry.Sub(n)+(secondsAfter*time.Second)
+		s.cleanupTimer = time.AfterFunc(nextRunIn, s.cleanupScheduler)
+	}else{
+		s.cleanupTimer = nil
+	}
+	s.cleanupLock.Unlock()
 }
 
-// Sanitize the key for logging purposes
-func encodeKey(k string) (key string) {
-	// Keys may not have any spaces
-	key = strings.Replace(k, " ", "_", -1)
-
-	return key
+func (s *Xregistry) startCleanup(runAfter time.Duration) {
+	if s.cleanupTimer == nil {
+		s.cleanupLock.Lock()
+		if s.cleanupTimer == nil {
+			s.cleanupTimer = time.AfterFunc(runAfter, s.cleanupScheduler)
+		}
+		s.cleanupLock.Unlock()
+	}
 }
 
-// Encode the value of the map for certain supported types.
-func encodeValue(i interface{}) (buf []byte, err error) {
-	v := reflect.ValueOf(i)
-
-	switch v.Kind() {
-	case reflect.String:
-		buf = append(buf, fmt.Sprintf("%q", i)...)
-	case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface,
-		reflect.Map, reflect.Ptr, reflect.Struct:
-		err = fmt.Errorf("Unable to encode %s value: type=%s value=%v",
-			v.Kind(), reflect.TypeOf(i), i)
-	default:
-		buf = append(buf, fmt.Sprintf("%v", i)...)
+func (s *Xregistry) stopCleanup(){
+	s.cleanupLock.Lock()
+	if s.cleanupTimer != nil {
+		s.cleanupTimer.Stop()
+		s.cleanupTimer = nil
 	}
+	s.cleanupLock.Unlock()
+}
 
-	return buf, err
+func (s *Xregistry) Close(){
+	s.stopCleanup()
 }

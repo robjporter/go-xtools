@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
-
 	"../xregistry"
+	"fmt"
+	"time"
 )
 
 type info struct {
@@ -12,6 +12,41 @@ type info struct {
 }
 
 func main() {
+	i := &info{name: "test", age: 22}
+	reg := xregsitry.NewXRegsitry()
+
+	fmt.Println(reg)
+
+	reg.SetCustom("key1",1,1*time.Second)
+	fmt.Println(reg.Get("key1"))
+	time.Sleep(3*time.Second)
+	fmt.Println("HERE: ",reg.Get("key1"))
+	reg.OnExpired = func(key interface{}, val interface{}){
+		fmt.Println("on expired", key, val)
+	}
+	reg.Close()
+
+	reg.Set("key1", 1)
+	reg.Set("key2", "test")
+	reg.Set("key3", false)
+	reg.Set("key4", 4.4)
+	reg.Set("key5", i)
+	reg.Set("key1", "1")
+	reg.Set("key1.1", "1")
+	reg.Set("key1.2", "2")
+	reg.Set("key8.1", "1")
+	reg.Set("key8.2", "2")
+
+	fmt.Println(reg.Get("key1"))
+	fmt.Println(reg.Get("key1.1"))
+	fmt.Println(reg.Get("key1.2"))
+	fmt.Println(reg.Get("key2"))
+	fmt.Println(reg.Get("key3"))
+	fmt.Println(reg.Get("key4"))
+	fmt.Println(reg.Get("key5"))
+	fmt.Println(reg.Get("key6"))
+	reg.Close()
+	/*
 	i := &info{name: "test", age: 22}
 	reg := xregistry.New()
 	reg.Set("key1", 1)
@@ -52,4 +87,5 @@ func main() {
 	fmt.Println(reg.Keys())
 	fmt.Println(reg.String())
 	fmt.Println(reg.Len())
+	*/
 }
