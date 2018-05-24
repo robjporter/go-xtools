@@ -6,6 +6,7 @@ import (
 	"math"
 	"fmt"
 	"strconv"
+	"bytes"
 )
 
 type Xaccounting struct{
@@ -30,7 +31,7 @@ func NewFromFloat(y float64) *Xaccounting {
 		decimal: ".",
 		precision: 0,
 		format: "%s%v",
-		nformat: "%s (%v)",
+		nformat: "%s(%v)",
 		roundon: 0.5,
 	}
 }
@@ -118,28 +119,73 @@ func (x *Xaccounting) Decimal(y string) (*Xaccounting,error) {
 	return x,err
 }
 
-func (x *Xaccounting) Precision(y int) (*Xaccounting,error) {
+func (x *Xaccounting) Precision(y int) *Xaccounting {
 	x.precision = y
-	return x,nil
+	return x
 }
 
 func (x *Xaccounting) Money(y float64) (string,error) {
 	x.money = y
-	round := fmt.Sprintf(fmt.Sprintf("%%.%df", x.precision), y)
+	round := fmt.Sprintf(fmt.Sprintf("%%%s%df", x.decimal,x.precision), y)
+	splits := strings.Split(round,x.decimal)
+	round = thousands(splits[0],x.thousand)
 
+	if len(splits) == 2 {
+		round += x.decimal + splits[1]
+	}
 
+	if y < 0 {
+		round = fmt.Sprintf(x.nformat,x.symbol,round)
+	} else {
+		round = fmt.Sprintf(x.format,x.symbol,round)
+	}
 
-	
-	return "",nil
+	return round,nil
 }
 
-func (x *Xaccounting) Tax(taxpercent float64) int64 {
-	return 0
+func (x *Xaccounting) IsZero() bool {
+	if x.money == 0 {
+		return true
+	}
+	return false
+}
+
+func (x *Xaccounting) IsPositive() bool {
+	return !x.IsNegative()
+}
+
+func (x *Xaccounting) IsNegative() bool {
+	if x.money < 0 {
+		return true
+	}
+	return false
+}
+
+func (x *Xaccounting) Tax(taxpercent float64) string {
+	tmp,_ := New().Symbol(x.symbol)
+	tmp.precision = x.precision
+	if !x.IsZero() {
+		a,e := tmp.Money(x.money * (taxpercent /100))
+		if e == nil {
+			return a
+		}
+	}
+	return ""
 }
 
 
-func (x *Xaccounting) Split(number int) *Xaccounting {
-	return x
+func (x *Xaccounting) Split(number int) string {
+	if number < 101 {
+		tmp := New()
+		tmp.precision = x.precision
+		tmp.symbol = x.symbol
+		res,e := tmp.Money(x.round(x.money/float64(number)))
+		if e == nil {
+			return res
+		}
+	}
+
+	return ""
 }
 
 func (x *Xaccounting) Add(y Xaccounting) *Xaccounting {
@@ -174,17 +220,7 @@ func (x *Xaccounting) String() string {
 	return ""
 }
 
-func (x *Xaccounting) IsZero() bool {
-	return true
-}
 
-func (x *Xaccounting) IsPositive() bool {
-	return true
-}
-
-func (x *Xaccounting) IsNegative() bool {
-	return true
-}
 
 func (x *Xaccounting) Equals(y Xaccounting) bool {
 	return true
@@ -217,5 +253,45 @@ func (x *Xaccounting) round(val float64) (newVal float64) {
 		round = math.Floor(digit)
 	}
 	newVal = round / pow
+	return
+}
+
+func thousands(num string, sep string) string {
+	ret := ""
+	num = reverse(num)
+	tmp := splitSub(num,3)
+	for i:=0;i<len(tmp);i++{
+		ret += tmp[i]
+		if i < len(tmp)-1 {
+			ret += sep
+		}
+	}
+	ret = reverse(ret)
+	return ret
+}
+
+func splitSub(s string, n int) []string {
+	sub := ""
+	subs := []string{}
+
+	runes := bytes.Runes([]byte(s))
+	l := len(runes)
+	for i, r := range runes {
+		sub = sub + string(r)
+		if (i + 1) % n == 0 {
+			subs = append(subs, sub)
+			sub = ""
+		} else if (i + 1) == l {
+			subs = append(subs, sub)
+		}
+	}
+
+	return subs
+}
+
+func reverse(s string) (result string) {
+	for _,v := range s {
+		result = string(v) + result
+	}
 	return
 }
