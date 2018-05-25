@@ -52,6 +52,29 @@ func NewFromString(y string) *Xaccounting {
 	}
 }
 
+
+func (x *Xaccounting) Allocate(y ...int) *Xaccounting {
+	return x
+}
+
+func (x *Xaccounting) Absolute(y Xaccounting) *Xaccounting {
+	return x
+}
+
+
+
+
+
+func (x *Xaccounting) Negative() *Xaccounting {
+	x.money = math.Abs(x.money) * (-1)
+	return x
+}
+
+func (x *Xaccounting) Positive() *Xaccounting {
+	x.money = math.Abs(x.money)
+	return x
+}
+
 func (x *Xaccounting) Reset() *Xaccounting {
 	x.thousand = ","
 	x.precision = 0
@@ -143,6 +166,14 @@ func (x *Xaccounting) Money(y float64) (string,error) {
 	return round,nil
 }
 
+func (x *Xaccounting) String() string {
+	a,b:=x.Money(x.money)
+	if b == nil {
+		return a
+	}
+	return ""
+}
+
 func (x *Xaccounting) IsZero() bool {
 	if x.money == 0 {
 		return true
@@ -165,7 +196,7 @@ func (x *Xaccounting) Tax(taxpercent float64) string {
 	tmp,_ := New().Symbol(x.symbol)
 	tmp.precision = x.precision
 	if !x.IsZero() {
-		a,e := tmp.Money(x.money * (taxpercent /100))
+		a,e := tmp.Money(x.getTax(taxpercent))
 		if e == nil {
 			return a
 		}
@@ -173,6 +204,23 @@ func (x *Xaccounting) Tax(taxpercent float64) string {
 	return ""
 }
 
+func (x *Xaccounting) getTax(taxpercent float64) float64 {
+	a := x.money * (taxpercent /100)
+	return a
+}
+
+func (x *Xaccounting) PreTax(taxpercent float64) string {
+	tax := x.getTax(taxpercent)
+	if tax > 0 {
+		tmp,_ := New().Symbol(x.symbol)
+		tmp.precision = x.precision
+		a,e := tmp.Money(x.money - x.getTax(taxpercent))
+		if e == nil {
+			return a
+		}
+	}
+	return ""
+}
 
 func (x *Xaccounting) Split(number int) string {
 	if number < 101 {
@@ -184,62 +232,62 @@ func (x *Xaccounting) Split(number int) string {
 			return res
 		}
 	}
-
 	return ""
 }
 
-func (x *Xaccounting) Add(y Xaccounting) *Xaccounting {
+func (x *Xaccounting) Add(y *Xaccounting) *Xaccounting {
+	x.money += y.money
 	return x
 }
 
-func (x *Xaccounting) Subtract(y Xaccounting) *Xaccounting {
+func (x *Xaccounting) Sub(y *Xaccounting) *Xaccounting {
+	x.money -= y.money
 	return x
 }
 
 func (x *Xaccounting) Divide(y int) *Xaccounting {
+	x.money = x.money / float64(y)
 	return x
 }
 
 func (x *Xaccounting) Multiply(y int) *Xaccounting {
+	x.money = x.money * float64(y)
 	return x
 }
 
-func (x *Xaccounting) Absolute(y Xaccounting) *Xaccounting {
-	return x
+func (x *Xaccounting) Equals(y *Xaccounting) bool {
+	if x.money == y.money {
+		return true
+	}
+	return false
 }
 
-func (x *Xaccounting) Negative() *Xaccounting {
-	return x
+func (x *Xaccounting) GreaterThan(y *Xaccounting) bool {
+	if x.money > y.money {
+		return true
+	}
+	return false
 }
 
-func (x *Xaccounting) Allocate(y ...int) *Xaccounting {
-	return x
+func (x *Xaccounting) GreaterThanEqual(y *Xaccounting) bool {
+	if x.money >= y.money {
+		return true
+	}
+	return false
 }
 
-func (x *Xaccounting) String() string {
-	return ""
+func (x *Xaccounting) LessThan(y *Xaccounting) bool {
+	if x.money < y.money {
+		return true
+	}
+	return false
 }
 
-
-
-func (x *Xaccounting) Equals(y Xaccounting) bool {
-	return true
-}
-
-func (x *Xaccounting) GreaterThan(y Xaccounting) bool {
-	return true
-}
-
-func (x *Xaccounting) GreaterThanEqual(y Xaccounting) bool {
-	return true
-}
-
-func (x *Xaccounting) LessThan(y Xaccounting) bool {
-	return true
-}
-
-func (x *Xaccounting) LessThaEqual(y Xaccounting) bool {
-	return true
+func (x *Xaccounting) LessThaEqual(y *Xaccounting) bool {
+	if x.money <= y.money {
+		return true
+	}
+	return false
 }
 
 func (x *Xaccounting) round(val float64) (newVal float64) {

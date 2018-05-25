@@ -20,4 +20,6 @@ func main() {
 	fmt.Println(xstrings.PosInSlice("test", []string{"a", "b", "tester", "testing", "test"}))
 	fmt.Println(xstrings.StringsBetween("[what is between]", "[", "]"))
 	fmt.Println(xstrings.StringBetween("[what is between]", "[", "]"))
+	fmt.Println(xstrings.Reverse("This is a test"))
+	fmt.Println(xstrings.Format("The {} says {}", "cow", "MOO!"))
 }

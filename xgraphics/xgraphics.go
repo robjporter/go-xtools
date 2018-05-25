@@ -7,7 +7,9 @@ import (
 	"./xicons"
 	"./xlines"
 	"./xprogress"
+	"./xtermo"
 )
+
 
 type Graphics struct {
 	Borders *xborders.Borders
@@ -15,10 +17,14 @@ type Graphics struct {
 	Icons   *xicons.Icons
 	Lines   *xlines.Lines
 	Display *xdisplay.Display
+	Terminal *xtermo.Framebuffer
 }
 
 func New() *Graphics {
-	return &Graphics{Borders: xborders.New(), Colors: xcolors.New(), Icons: xicons.New(), Lines: xlines.New(), Display: xdisplay.New()}
+	xtermo.Init()
+	defer xtermo.Stop()
+	w, h, _ := xtermo.Size()
+	return &Graphics{Borders: xborders.New(), Colors: xcolors.New(), Icons: xicons.New(), Lines: xlines.New(), Display: xdisplay.New(),Terminal:xtermo.NewFramebuffer(w,h)}
 }
 
 func NewProgress(title string) *xprogress.Xprogress {
@@ -26,6 +32,5 @@ func NewProgress(title string) *xprogress.Xprogress {
 }
 
 func ProgressLn(args ...interface{}) {
-
 	xprogress.Println(args...)
 }

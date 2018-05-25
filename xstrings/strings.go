@@ -12,6 +12,13 @@ import (
 
 var noop = func(a rune) rune { return a }
 
+func Reverse(s string) (result string) {
+	for _,v := range s {
+		result = string(v) + result
+	}
+	return
+}
+
 func IsInSlice(str string, list []string) bool {
 	for _, v := range list {
 		if v == str {
