@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"net/url"
+	"reflect"
 )
 
 func IsEmpty(tmp string) bool {
@@ -31,6 +33,11 @@ func IsEmail(email string) bool {
 		return false
 	}
 	return ok
+}
+
+func IsEmail2(email string) bool {
+	r := regexp.MustCompile(`.+@.+\..+`)
+	return r.MatchString(email)
 }
 
 func IsNotEmpty(tmp string) bool {
@@ -184,10 +191,28 @@ func IsIPAddress(ip string) bool {
 }
 
 func IsInSlice(v interface{}, sl []interface{}) bool {
-	for _, vv := range sl {
-		if vv == v {
-			return true
-		}
+	switch reflect.TypeOf(sl).Kind() {
+		case reflect.Slice:
+			for _, vv := range sl {
+				if vv == v {
+					return true
+				}
+			}
+		default:
+			return false
 	}
 	return false
+}
+
+func IsURL(uri string) bool {
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		return false
+	}
+	return strings.HasPrefix(u.Scheme, "http")
+}
+
+func IsUUID(uuid string) bool {
+	r := regexp.MustCompile("[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[8|9|aA|bB][a-f0-9]{3}-[a-f0-9]{12}")
+	return r.MatchString(uuid)
 }

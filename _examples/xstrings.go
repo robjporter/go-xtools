@@ -8,7 +8,12 @@ import (
 
 func main() {
 	fmt.Println(xstrings.Center("This is a test", "=", 50))
-	fmt.Println(xstrings.Substring("This is a test", 5, 6))
+	fmt.Println(xstrings.SubString("This is a test", 5, 6))
+	fmt.Println(xstrings.SubStringStart("This is a test", 6))
+	fmt.Println(xstrings.SubStringEnd("This is a test", 6))
+	fmt.Println(xstrings.Truncate("This is a test", 6,false))
+	fmt.Println(xstrings.Truncate("This is a test", 6,true))
+
 	fmt.Println(xstrings.UUID4())
 	fmt.Println(xstrings.ToTrain("ThisA_test"))
 	fmt.Println(xstrings.ToSpinal("ThisA_test"))

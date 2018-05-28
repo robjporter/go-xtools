@@ -37,6 +37,28 @@ func PosInSlice(str string, list []string) int {
 	return -1
 }
 
+func SubString(str string, startIndex, endIndex int) string {
+	return string([]rune(str)[startIndex:endIndex])
+}
+
+func SubStringStart(str string, startIndex int) string {
+	endIndex := utf8.RuneCountInString(str)
+	return SubString(str, startIndex, endIndex)
+}
+
+func SubStringEnd(str string, endIndex int) string {
+	return SubString(str, 0, endIndex)
+}
+
+func Truncate(str string, length int, withExtenders bool) string {
+	extenders := "..."
+	if utf8.RuneCountInString(str) <= length {
+		return str
+	}
+	if withExtenders {length-=len(extenders)}
+	return SubStringEnd(str, length)+extenders
+}
+
 func StringsBetween(str, start, end string) (between []string) {
 	between = make([]string, 0)
 	fsplit := strings.Split(str, start)
@@ -119,27 +141,6 @@ func writePadString(output *bytes.Buffer, pad string, padLen, remains int) {
 	}
 }
 
-func Substring(in string, start int, length uint) string {
-	if length > 0 {
-		size := len(in)
-		if start < 0 {
-			frontIndex := size + start
-			if frontIndex < 0 {
-				return ""
-			}
-			start = frontIndex
-		}
-		if start >= size {
-			return ""
-		}
-		rearIndex := start + int(length)
-		if rearIndex >= size {
-			return in[start:]
-		}
-		return in[start:rearIndex]
-	}
-	return ""
-}
 
 func ToTrain(s string) string {
 	return snaker(s, '-', unicode.ToUpper, unicode.ToUpper, noop)

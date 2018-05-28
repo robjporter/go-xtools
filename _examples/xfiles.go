@@ -18,4 +18,5 @@ func main() {
 	a, e := xfiles.LookupPath("./;~/", "xas.go")
 	fmt.Println("LOOKUP PATH: ", a, e)
 	fmt.Println("COPY FILE/DIR ", xfiles.Copy("xas.go", "as.go"))
+	fmt.Println("CURRENT PATH: ",xfiles.CurrentPath())
 }

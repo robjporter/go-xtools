@@ -7,10 +7,18 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"runtime"
 )
 
 var topath string
 var frompath string
+
+func CurrentPath() string {
+	if _, filename, _, ok := runtime.Caller(1); ok {
+		return path.Dir(filename) + "/"
+	}
+	return ""
+}
 
 func Exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {

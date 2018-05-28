@@ -30,6 +30,25 @@ func main() {
 	isinslice()
 	time.Sleep(1 * time.Second)
 	isipaddress()
+	time.Sleep(1 * time.Second)
+	ishttp()
+	time.Sleep(1 * time.Second)
+	isuuid()
+}
+
+func isuuid() {
+	fmt.Println("")
+	fmt.Println("IS UUID *******************************************************")
+	fmt.Println("isuuid(''):                  >", is.IsUUID(""))
+}
+
+func ishttp() {
+	fmt.Println("")
+	fmt.Println("IS HTTP *******************************************************")
+	fmt.Println("IsURL(''):                  >", is.IsURL(""))
+	fmt.Println("IsURL(''):                  >", is.IsURL("www.google.co.uk"))
+	fmt.Println("IsURL(''):                  >", is.IsURL("http://www.google.co.uk"))
+	fmt.Println("IsURL(''):                  >", is.IsURL("https://www.google.co.uk"))
 }
 
 func isempty() {
@@ -75,6 +94,11 @@ func isemail() {
 	fmt.Println("IsEmail('test.test'):         >", is.IsEmail("test.test"))
 	fmt.Println("IsEmail('test@test'):         >", is.IsEmail("test@test"))
 	fmt.Println("IsEmail('test@test.test'):    >", is.IsEmail("test@test.com"))
+	fmt.Println("IsEmail2(''):                 >", is.IsEmail2(""))
+	fmt.Println("IsEmail2('test'):             >", is.IsEmail2("test"))
+	fmt.Println("IsEmail2('test.test'):        >", is.IsEmail2("test.test"))
+	fmt.Println("IsEmail2('test@test'):        >", is.IsEmail2("test@test"))
+	fmt.Println("IsEmail2('test@test.test'):   >", is.IsEmail2("test@test.com"))
 }
 
 func isint() {
