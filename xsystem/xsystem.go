@@ -17,6 +17,16 @@ func getallocatedmem() *runtime.MemStats{
 	return s
 }
 
+func (x *Xsystem) GetCPU() int {
+	maxProcs := runtime.GOMAXPROCS(0)
+	numCPU := runtime.NumCPU()
+
+	if maxProcs < numCPU {
+		return maxProcs
+	}
+	return numCPU
+}
+
 // func Allocated returns a string of current memory usage such as "8KB" or "16MB"
 func  (x *Xsystem) GetMem() string {
 	m := getallocatedmem().Alloc

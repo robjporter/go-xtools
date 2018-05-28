@@ -8,4 +8,5 @@ import (
 func main() {
 	x := xsystem.New()
 	fmt.Println(x.GetMem())
+	fmt.Println(x.GetCPU())
 }
