@@ -1,7 +1,8 @@
 package hxconnect
 
+/*
 import (
-	"../request"
+	"github.com/DavidCai1993/request"
 )
 
 type capurls struct {
@@ -27,19 +28,20 @@ func getCapURLS() *capurls {
 	}
 }
 
-func (c *Connection) GetLicenseAgreement() (*request.Client,error) {
-	req,e := c.sendGetRequest(c.Metrics.Server, c.capurls.LicenseAgreement)
-	return req,e
+func (c *Connection) GetLicenseAgreement() (*request.Client, error) {
+	req, e := c.sendGetRequest(c.Metrics.Server, c.capurls.LicenseAgreement)
+	return req, e
 }
 
-func (c *Connection) ValidateContactNumberWithCisco(contract string) (*request.Client,error)  {
+func (c *Connection) ValidateContactNumberWithCisco(contract string) (*request.Client, error) {
 	data := make(map[string]string)
 	data["contractnumber"] = contract
-	req,e := c.sendPostRequest(c.Metrics.Server, c.capurls.ValidateContract, data)
-	return req,e
+	req, e := c.sendPostRequest(c.Metrics.Server, c.capurls.ValidateContract, data)
+	return req, e
 }
 
-func (c *Connection) SendDataToCaptial(json string) (*request.Client,error) {
+func (c *Connection) SendDataToCaptial(json string) (*request.Client, error) {
 	req, e := c.sendPostRequestSimple(c.Metrics.Server, c.capurls.SubmitData, json)
-	return req,e
+	return req, e
 }
+*/
