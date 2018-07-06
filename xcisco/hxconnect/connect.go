@@ -7,7 +7,7 @@ package hxconnect
 // GET /datastores
 // GET /summary
 // GET /appliances
-
+/*
 import (
 	"errors"
 	"strings"
@@ -345,3 +345,4 @@ func (c *Connection) ClusterVersion() (*request.Client,error) {
 	}
 	return nil,errors.New("Settings need to be updated before requests can be made.")
 }
+*/
