@@ -13,7 +13,7 @@ type info struct {
 
 func main() {
 	i := &info{name: "test", age: 22}
-	reg := xregsitry.NewXRegsitry()
+	reg := xregsitry.New()
 
 	fmt.Println(reg)
 
