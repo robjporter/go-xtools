@@ -1003,7 +1003,7 @@ func diffstring(value int, short bool, long string) string {
 	return tmp
 }
 
-func round(d, r time.Duration) time.Duration {
+func timeround(d, r time.Duration) time.Duration {
 	if r <= 0 {
 		return d
 	}
