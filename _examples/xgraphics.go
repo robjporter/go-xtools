@@ -25,7 +25,7 @@ func main() {
 	g.Borders.SetContent(lines)
 	g.Borders.SetSpacer(12)
 
-	g.Borders.PrintBorder()
+	g.Borders.PrintBorder(true)
 
 	g.Icons.PrintIconStyles()
 	g.Icons.PrintIcon("cross")
@@ -97,7 +97,6 @@ func main() {
 	fmt.Println("")
 
 	fmt.Println(g.Colors.NewString().BlinkingText("   Blinking Red   "))
-
 
 	pgb := xgraphics.NewProgress("多线程进度条")
 	xgraphics.ProgressLn("进度条1")

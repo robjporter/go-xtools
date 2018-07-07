@@ -1,7 +1,8 @@
 package xgraphics
 
 import (
-	"github.com/robjporter/go-xtools/xgraphics/xborders"
+	// "github.com/robjporter/go-xtools/xgraphics/xborders"
+	"./xborders"
 	"github.com/robjporter/go-xtools/xgraphics/xcolors"
 	"github.com/robjporter/go-xtools/xgraphics/xdisplay"
 	"github.com/robjporter/go-xtools/xgraphics/xicons"

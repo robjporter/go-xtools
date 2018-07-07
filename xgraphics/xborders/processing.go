@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"strings"
 
-	runewidth "github.com/mattn/go-runewidth"
+	"github.com/mattn/go-runewidth"
+	"github.com/robjporter/go-xtools/xgraphics/xdisplay"
+	"fmt"
 )
 
-func processBorder(b borderStyle, spacers int, lines []string) string {
+func processBorder(b borderStyle, spacers int, lines []string, center bool) string {
 	max := 0
 	for _, l := range lines {
 		w := widthANSI(l)
@@ -17,12 +19,24 @@ func processBorder(b borderStyle, spacers int, lines []string) string {
 	}
 
 	max += spacers * 2
+	leftpadding := 0
+
+	if center {
+		_, width, _ := xdisplay.New().TerminalSize()
+		if max < width {
+			fmt.Println("HERE")
+			tmp := width - max
+			leftpadding = tmp / 2
+		}
+	}
+
+	padding := strings.Repeat(" ", leftpadding)
 
 	var w bytes.Buffer
 	ml := widthANSI(b[borderMiddle])
 	maxp := max + ml*2
 
-	w.WriteString(b[borderTopLeft])
+	w.WriteString(padding + b[borderTopLeft])
 	tl := widthANSI(b[borderTop])
 	for i := 0; i < maxp; i += tl {
 		w.WriteString(b[borderTop])
@@ -35,7 +49,7 @@ func processBorder(b borderStyle, spacers int, lines []string) string {
 		// continue escapes
 		w.WriteString(esc)
 
-		w.WriteString(b[borderLeft])
+		w.WriteString(padding + b[borderLeft])
 		w.WriteString(b[borderMiddle])
 		w.WriteString(strings.Repeat(" ", spacers) + line)
 		l := widthANSI(line) - ml + spacers
@@ -51,7 +65,7 @@ func processBorder(b borderStyle, spacers int, lines []string) string {
 		esc = escCont(line)
 	}
 
-	w.WriteString(b[borderBottomLeft])
+	w.WriteString(padding + b[borderBottomLeft])
 	bl := widthANSI(b[borderBottom])
 	for i := 0; i < maxp; i += bl {
 		w.WriteString(b[borderBottom])
