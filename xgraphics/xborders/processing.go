@@ -6,7 +6,6 @@ import (
 
 	"github.com/mattn/go-runewidth"
 	"github.com/robjporter/go-xtools/xgraphics/xdisplay"
-	"fmt"
 )
 
 func processBorder(b borderStyle, spacers int, lines []string, center bool) string {
@@ -24,7 +23,6 @@ func processBorder(b borderStyle, spacers int, lines []string, center bool) stri
 	if center {
 		_, width, _ := xdisplay.New().TerminalSize()
 		if max < width {
-			fmt.Println("HERE")
 			tmp := width - max
 			leftpadding = tmp / 2
 		}
