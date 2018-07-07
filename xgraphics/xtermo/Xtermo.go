@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unicode/utf8"
 
-	"./terminal"
+	"github.com/robjporter/go-xtools/xgraphics/xtermo/terminal"
 )
 
 // ErrNotATerminal is the error returned when running
@@ -19,7 +19,6 @@ var width int
 var height int
 
 // Control sequences documentation: http://www.xfree86.org/current/ctlseqs.html
-
 
 // Init initializes termo to work with the terminal
 func Init() error {
@@ -161,7 +160,7 @@ type Color int
 
 // Different colors to use as attributes
 const (
-	ColorBlack Color = 30 + iota
+	ColorBlack   Color = 30 + iota
 	ColorRed
 	ColorGreen
 	ColorYellow
