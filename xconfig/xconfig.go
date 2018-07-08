@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/robjporter/go-utils/go/as"
+	"github.com/robjporter/go-xtools/xas"
 	"gopkg.in/yaml.v2"
 )
 
@@ -75,7 +75,7 @@ func (cfg *Config) ReadFiles(files ...string) {
 // ///////////////////////////////////////////////////
 func (cfg *Config) ReadString(config string) error {
 	tmp := new(Config)
-	err := tmp.readBuffer(as.ToBytes(config))
+	err := tmp.readBuffer(xas.ToBytes(config))
 	if err == nil {
 		merge(&cfg.root, &tmp.root)
 		return nil
