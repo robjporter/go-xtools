@@ -51,9 +51,11 @@ func (c *CronJob) SetName(name string) *CronJob {
 }
 
 func (c *CronJob) Run() *CronJob {
-	if !c.running {
-		c.running = true
-		go c.run()
+	if c.name != "" {
+		if !c.running {
+			c.running = true
+			go c.run()
+		}
 	}
 	return c
 }
