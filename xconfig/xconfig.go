@@ -12,10 +12,19 @@ import (
 
 	"github.com/robjporter/go-xtools/xas"
 	"gopkg.in/yaml.v2"
+	"time"
 )
 
+type expire struct {
+	expiry  time.Time
+	access  time.Time
+	expires time.Duration
+}
+
 type Config struct {
-	root interface{}
+	root    interface{}
+	Expiry  time.Duration
+	expires map[interface{}]*expire
 }
 
 // ///////////////////////////////////////////////////
@@ -23,8 +32,14 @@ type Config struct {
 // ///////////////////////////////////////////////////
 var cfg = New()
 
-func New() *Config {
-	return &Config{root: make(map[interface{}]interface{})}
+func New(expiry ...time.Duration) *Config {
+	c := &Config{root: make(map[interface{}]interface{}), expires: make(map[interface{}]*expire)}
+	if expiry != nil {
+		c.Expiry = expiry[0]
+	} else {
+		c.Expiry = 1<<63 - 1
+	}
+	return c
 }
 
 // ///////////////////////////////////////////////////
@@ -119,6 +134,25 @@ func (cfg *Config) Sub(path string) *Config {
 	return &ncfg
 }
 
+func Remove(path string) (bool, error) { return cfg.Remove(path) }
+func (cfg *Config) Remove(path string) (bool, error) {
+	cfg.expires[path] = nil
+	return true, nil
+}
+
+func remove(path string, data *interface{}) {
+	m, ok := (*data).(map[interface{}]interface{})
+	if ok {
+		for k, _ := range m {
+			fmt.Println(path, " | ", k)
+			if path == k {
+				fmt.Println("HERE")
+				m[path] = nil
+			}
+		}
+	}
+}
+
 // ///////////////////////////////////////////////////
 // PUBLIC GET
 // ///////////////////////////////////////////////////
@@ -128,7 +162,15 @@ func (cfg *Config) Get(path string) (interface{}, error) {
 	if err != nil {
 		fmt.Printf("Failed to get path: %s\n", path)
 		fmt.Printf("%s\n", err.Error())
+	} else {
+		n := time.Now()
+		cfg.expires[path].access = n
+		if cfg.expires[path].expiry.Before(n) {
+			remove(path, &cfg.root)
+			return nil, errors.New("Item has expired.")
+		}
 	}
+
 	return val, err
 }
 
@@ -237,6 +279,20 @@ func Set(path string, value interface{}) { cfg.Set(path, value) }
 func (cfg *Config) Set(path string, value interface{}) {
 	data := build(path, value)
 	merge(&cfg.root, &data)
+	n := time.Now()
+	exp := n.Add(cfg.Expiry)
+	tmp := &expire{expiry: exp, access: n}
+	cfg.expires[path] = tmp
+}
+
+func SetCustom(path string, value interface{}, expirys time.Duration) { cfg.SetCustom(path, value, expirys) }
+func (cfg *Config) SetCustom(path string, value interface{}, expirys time.Duration) {
+	data := build(path, value)
+	merge(&cfg.root, &data)
+	n := time.Now()
+	exp := n.Add(expirys)
+	tmp := &expire{expiry: exp, access: n}
+	cfg.expires[path] = tmp
 }
 
 // ///////////////////////////////////////////////////
