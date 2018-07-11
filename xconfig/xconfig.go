@@ -144,9 +144,7 @@ func remove(path string, data *interface{}) {
 	m, ok := (*data).(map[interface{}]interface{})
 	if ok {
 		for k, _ := range m {
-			fmt.Println(path, " | ", k)
 			if path == k {
-				fmt.Println("HERE")
 				m[path] = nil
 			}
 		}
