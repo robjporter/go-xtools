@@ -172,6 +172,16 @@ func (cfg *Config) Get(path string) (interface{}, error) {
 	return val, err
 }
 
+func GetStringSlice(path string) ([]string, error) { return cfg.GetStringSlice(path) }
+func (cfg *Config) GetStringSlice(path string) ([]string, error) {
+	tmp, err := cfg.Get(path)
+	if err == nil {
+		return tmp.([]string), nil
+	} else {
+		return nil, err
+	}
+}
+
 func GetSlice(path string) ([]interface{}, error) { return cfg.GetSlice(path) }
 func (cfg *Config) GetSlice(path string) ([]interface{}, error) {
 	tmp, err := cfg.Get(path)
