@@ -176,7 +176,9 @@ func GetStringSlice(path string) ([]string, error) { return cfg.GetStringSlice(p
 func (cfg *Config) GetStringSlice(path string) ([]string, error) {
 	tmp, err := cfg.Get(path)
 	if err == nil {
-		return tmp.([]string), nil
+		if cfg.expires[path].expiry.Before(n) {
+			return tmp.([]string), nil
+		}
 	} else {
 		return nil, err
 	}
@@ -186,7 +188,9 @@ func GetSlice(path string) ([]interface{}, error) { return cfg.GetSlice(path) }
 func (cfg *Config) GetSlice(path string) ([]interface{}, error) {
 	tmp, err := cfg.Get(path)
 	if err == nil {
-		return tmp.([]interface{}), nil
+		if cfg.expires[path].expiry.Before(n) {
+			return tmp.([]interface{}), nil
+		}
 	} else {
 		return nil, err
 	}
@@ -196,7 +200,9 @@ func GetSliceSize(path string) (int, error) { return cfg.GetSliceSize(path) }
 func (cfg *Config) GetSliceSize(path string) (int, error) {
 	tmp, err := cfg.Get(path)
 	if err == nil {
-		return len(tmp.([]interface{})), nil
+		if cfg.expires[path].expiry.Before(n) {
+			return len(tmp.([]interface{})), nil
+		}
 	} else {
 		return -1, err
 	}
@@ -226,7 +232,9 @@ func (cfg *Config) GetString(path string) string {
 		if !ok {
 			return ""
 		} else {
-			return str
+			if cfg.expires[path].expiry.Before(n) {
+				return str
+			}
 		}
 	}
 }
@@ -241,7 +249,9 @@ func (cfg *Config) GetInt(path string) int {
 		if !ok {
 			return 0
 		} else {
-			return num
+			if cfg.expires[path].expiry.Before(n) {
+				return num
+			}
 		}
 	}
 }
@@ -258,7 +268,9 @@ func (cfg *Config) GetBool(path string) bool {
 			fmt.Printf("Mismatched type")
 			return false
 		} else {
-			return b
+			if cfg.expires[path].expiry.Before(n) {
+				return b
+			}
 		}
 	}
 }
@@ -275,7 +287,9 @@ func (cfg *Config) GetFloat(path string) float64 {
 			fmt.Printf("Mismatched type")
 			return float64(-1)
 		} else {
-			return b
+			if cfg.expires[path].expiry.Before(n) {
+				return b
+			}
 		}
 	}
 }
