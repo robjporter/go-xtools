@@ -165,8 +165,8 @@ func (cfg *Config) Get(path string) (interface{}, error) {
 		cfg.expires[path].access = n
 		if cfg.expires[path].expiry.Before(n) {
 			remove(path, &cfg.root)
-			return nil, errors.New("Item has expired.")
 		}
+		return nil, errors.New("Item has expired.")
 	}
 
 	return val, err
@@ -180,6 +180,7 @@ func (cfg *Config) GetStringSlice(path string) ([]string, error) {
 		if cfg.expires[path].expiry.Before(n) {
 			return tmp.([]string), nil
 		}
+		return nil, errors.New("Key missing or expired.")
 	} else {
 		return nil, err
 	}
@@ -193,6 +194,7 @@ func (cfg *Config) GetSlice(path string) ([]interface{}, error) {
 		if cfg.expires[path].expiry.Before(n) {
 			return tmp.([]interface{}), nil
 		}
+		return nil, errors.New("Key missing or expired.")
 	} else {
 		return nil, err
 	}
@@ -206,6 +208,7 @@ func (cfg *Config) GetSliceSize(path string) (int, error) {
 		if cfg.expires[path].expiry.Before(n) {
 			return len(tmp.([]interface{})), nil
 		}
+		return -1, errors.New("Key missing or expired.")
 	} else {
 		return -1, err
 	}
@@ -239,6 +242,7 @@ func (cfg *Config) GetString(path string) string {
 			if cfg.expires[path].expiry.Before(n) {
 				return str
 			}
+			return ""
 		}
 	}
 }
@@ -257,6 +261,7 @@ func (cfg *Config) GetInt(path string) int {
 			if cfg.expires[path].expiry.Before(n) {
 				return num
 			}
+			return 0
 		}
 	}
 }
@@ -277,6 +282,7 @@ func (cfg *Config) GetBool(path string) bool {
 			if cfg.expires[path].expiry.Before(n) {
 				return b
 			}
+			return false
 		}
 	}
 }
@@ -297,6 +303,7 @@ func (cfg *Config) GetFloat(path string) float64 {
 			if cfg.expires[path].expiry.Before(n) {
 				return b
 			}
+			return 0.0
 		}
 	}
 }
