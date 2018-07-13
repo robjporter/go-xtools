@@ -163,7 +163,7 @@ func (cfg *Config) Get(path string) (interface{}, error) {
 	} else {
 		n := time.Now()
 		cfg.expires[path].access = n
-		if cfg.expires[path].expiry.Before(n) {
+		if cfg.expires[path].expiry.After(n) {
 			remove(path, &cfg.root)
 		}
 		return nil, errors.New("Item has expired.")
@@ -177,7 +177,7 @@ func (cfg *Config) GetStringSlice(path string) ([]string, error) {
 	tmp, err := cfg.Get(path)
 	if err == nil {
 		n := time.Now()
-		if cfg.expires[path].expiry.Before(n) {
+		if cfg.expires[path].expiry.After(n) {
 			return tmp.([]string), nil
 		}
 		return nil, errors.New("Key missing or expired.")
@@ -191,7 +191,7 @@ func (cfg *Config) GetSlice(path string) ([]interface{}, error) {
 	tmp, err := cfg.Get(path)
 	if err == nil {
 		n := time.Now()
-		if cfg.expires[path].expiry.Before(n) {
+		if cfg.expires[path].expiry.After(n) {
 			return tmp.([]interface{}), nil
 		}
 		return nil, errors.New("Key missing or expired.")
@@ -205,7 +205,7 @@ func (cfg *Config) GetSliceSize(path string) (int, error) {
 	tmp, err := cfg.Get(path)
 	if err == nil {
 		n := time.Now()
-		if cfg.expires[path].expiry.Before(n) {
+		if cfg.expires[path].expiry.After(n) {
 			return len(tmp.([]interface{})), nil
 		}
 		return -1, errors.New("Key missing or expired.")
@@ -239,7 +239,11 @@ func (cfg *Config) GetString(path string) string {
 			return ""
 		} else {
 			n := time.Now()
-			if cfg.expires[path].expiry.Before(n) {
+			fmt.Println("NOW: ", n)
+			fmt.Println("EXPIRY: ", cfg.expires[path].expiry)
+			fmt.Println("EXPIRES: ", cfg.expires[path].expires)
+			fmt.Println("ACCESS: ", cfg.expires[path].access)
+			if cfg.expires[path].expiry.After(n) {
 				return str
 			}
 			return ""
@@ -258,7 +262,7 @@ func (cfg *Config) GetInt(path string) int {
 			return 0
 		} else {
 			n := time.Now()
-			if cfg.expires[path].expiry.Before(n) {
+			if cfg.expires[path].expiry.After(n) {
 				return num
 			}
 			return 0
@@ -279,7 +283,7 @@ func (cfg *Config) GetBool(path string) bool {
 			return false
 		} else {
 			n := time.Now()
-			if cfg.expires[path].expiry.Before(n) {
+			if cfg.expires[path].expiry.After(n) {
 				return b
 			}
 			return false
@@ -300,7 +304,7 @@ func (cfg *Config) GetFloat(path string) float64 {
 			return float64(-1)
 		} else {
 			n := time.Now()
-			if cfg.expires[path].expiry.Before(n) {
+			if cfg.expires[path].expiry.After(n) {
 				return b
 			}
 			return 0.0
