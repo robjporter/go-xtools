@@ -164,11 +164,10 @@ func (cfg *Config) Get(path string) (interface{}, error) {
 		n := time.Now()
 		cfg.expires[path].access = n
 		if cfg.expires[path].expiry.After(n) {
-			remove(path, &cfg.root)
+			return val, err
 		}
 		return nil, errors.New("Item has expired.")
 	}
-
 	return val, err
 }
 
@@ -239,10 +238,6 @@ func (cfg *Config) GetString(path string) string {
 			return ""
 		} else {
 			n := time.Now()
-			fmt.Println("NOW: ", n)
-			fmt.Println("EXPIRY: ", cfg.expires[path].expiry)
-			fmt.Println("EXPIRES: ", cfg.expires[path].expires)
-			fmt.Println("ACCESS: ", cfg.expires[path].access)
 			if cfg.expires[path].expiry.After(n) {
 				return str
 			}
@@ -412,8 +407,10 @@ func get(path string, data interface{}) (interface{}, error) {
 	if path == "" {
 		return data, nil
 	}
+
 	segs := strings.Split(path, ".")
 	seg := segs[0]
+
 	data_map, ok := data.(map[interface{}]interface{})
 	if !ok {
 		return nil, errors.New("Mismatched type")
@@ -425,7 +422,6 @@ func get(path string, data interface{}) (interface{}, error) {
 	}
 
 	return get(strings.Join(segs[1:], "."), val)
-
 }
 
 func build(path string, value interface{}) interface{} {
