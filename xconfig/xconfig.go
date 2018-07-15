@@ -125,7 +125,7 @@ func Sub(path string) *Config { return cfg.Sub(path) }
 func (cfg *Config) Sub(path string) *Config {
 	data, err := cfg.Get(path)
 	if err != nil {
-		fmt.Printf("Failed to get %s\n", path)
+		// fmt.Printf("Failed to get %s\n", path)
 		return nil
 	}
 
@@ -158,8 +158,8 @@ func Get(path string) (interface{}, error) { return cfg.Get(path) }
 func (cfg *Config) Get(path string) (interface{}, error) {
 	val, err := get(path, cfg.root)
 	if err != nil {
-		fmt.Printf("Failed to get path: %s\n", path)
-		fmt.Printf("%s\n", err.Error())
+		// fmt.Printf("Failed to get path: %s\n", path)
+		// fmt.Printf("%s\n", err.Error())
 	} else {
 		n := time.Now()
 		cfg.expires[path].access = n
@@ -269,7 +269,7 @@ func GetBool(path string) bool { return cfg.GetBool(path) }
 func (cfg *Config) GetBool(path string) bool {
 	val, err := cfg.Get(path)
 	if err != nil {
-		fmt.Printf("No such value")
+		// fmt.Printf("No such value")
 		return false
 	} else {
 		b, ok := val.(bool)
@@ -290,7 +290,7 @@ func GetFloat(path string) float64 { return cfg.GetFloat(path) }
 func (cfg *Config) GetFloat(path string) float64 {
 	val, err := cfg.Get(path)
 	if err != nil {
-		fmt.Printf("No such value")
+		// fmt.Printf("No such value")
 		return float64(-1)
 	} else {
 		b, ok := val.(float64)
