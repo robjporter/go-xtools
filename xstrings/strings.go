@@ -2,18 +2,33 @@ package xstrings
 
 import (
 	"bytes"
-	"crypto/rand"
+	"math/rand"
 	"fmt"
 	"io"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	"time"
+	"crypto/sha1"
+	"encoding/hex"
+	"crypto/sha256"
+	rand2 "crypto/rand"
 )
 
-var noop = func(a rune) rune { return a }
+const (
+	letterBytes   = `123456789afhjkoqrsuvwxyzAFHJKQRSUVWXYZ`
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+var (
+	noop = func(a rune) rune { return a }
+	src  = rand.NewSource(time.Now().UnixNano())
+)
 
 func Reverse(s string) (result string) {
-	for _,v := range s {
+	for _, v := range s {
 		result = string(v) + result
 	}
 	return
@@ -55,8 +70,10 @@ func Truncate(str string, length int, withExtenders bool) string {
 	if utf8.RuneCountInString(str) <= length {
 		return str
 	}
-	if withExtenders {length-=len(extenders)}
-	return SubStringEnd(str, length)+extenders
+	if withExtenders {
+		length -= len(extenders)
+	}
+	return SubStringEnd(str, length) + extenders
 }
 
 func StringsBetween(str, start, end string) (between []string) {
@@ -141,7 +158,6 @@ func writePadString(output *bytes.Buffer, pad string, padLen, remains int) {
 	}
 }
 
-
 func ToTrain(s string) string {
 	return snaker(s, '-', unicode.ToUpper, unicode.ToUpper, noop)
 }
@@ -168,7 +184,7 @@ func ToCamelLower(s string) string {
 
 func UUID4() (string, bool) {
 	uuid := make([]byte, 16)
-	n, err := io.ReadFull(rand.Reader, uuid)
+	n, err := io.ReadFull(rand2.Reader, uuid)
 	if n != len(uuid) || err != nil {
 		return "", false
 	}
@@ -212,4 +228,63 @@ func snaker(s string, wordSeparator rune, firstRune func(rune) rune, firstRuneOf
 	}
 
 	return string(newS)
+}
+
+func RandStringWithLengthLimit(n int) string {
+	b := make([]byte, n)
+	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return string(b)
+}
+
+func Sha1(in string) string {
+	hasher := sha1.New()
+	hasher.Write([]byte(in))
+	out := hasher.Sum(nil)
+
+	return hex.EncodeToString(out)
+}
+
+func Sha256(in string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(in))
+	out := hasher.Sum(nil)
+
+	return hex.EncodeToString(out)
+}
+
+func MaskString(orig, mask string, revealLength, length int) string {
+
+	if orig == "" {
+		return ""
+	}
+
+	if length <= 0 {
+		length = len(orig)
+	}
+
+	str := ""
+	for len(str) < length {
+		str = str + mask
+	}
+
+	if revealLength == -1 {
+		return str
+	}
+
+	// fmt.Println(str, length, revealLength, orig, len(orig))
+	str = fmt.Sprintf("%s%s", str[:length-revealLength], orig[len(orig)-revealLength:])
+
+	return str
 }
